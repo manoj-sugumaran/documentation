@@ -1,0 +1,2367 @@
+swagger: '2.0'
+schemes:
+  - https
+host: dis.onmo.com
+basePath: /ringtone/
+info:
+  description: |
+    Description of all the APIs provided by the Shark Server
+    # Introduction
+    SHARK has implemented the Atlantis Generic Content Ingestion API which will be used to ingest the content metadata in to the SHARK runtime DB without providing the data base access to the Atlantis site level components, with this we will have more freedom how to represent the data in to DB which is convenient to the SHARK. It also provides the flexibility to switch to any other data base in future which may be SQL/No –SQL DB without depending the Atlantis Components. It also    
+    provide APIs
+    SHARK provides the following APIs to APP for communication between the server and the client. Both the request and reponse for these APIs will be in JSON format.
+    # Firebase Token
+    - Android Code snippet for generating Firebase token
+    ```java
+    FirebaseUser mUser = FirebaseAuth.getInstance().getCurrentUser();
+    mUser.getIdToken(true)
+    .addOnCompleteListener(new OnCompleteListener<GetTokenResult>() {
+        public void onComplete(@NonNull Task<GetTokenResult> task) {
+            if (task.isSuccessful()) {
+                String idToken = task.getResult().getToken();
+                // Send token to your backend via HTTPS
+                // ...
+            } else {
+                // Handle error -> task.getException();
+            }
+        }
+    });
+    ``` 
+    # Service Account
+    A service accounts key file is required for the server to authenticate the above generated firebase token.
+    - Go to the IAM & Admin page : https://console.cloud.google.com/projectselector/iam-admin
+    - Select the project being used for generating firebase_uid & firebase_token
+    - On the left navigational panel, choose 'Service accounts'
+    - Generate key with service account name 'App Engine default service account' and share the JSON file with the server
+
+    - Sample JSON file
+    ```json
+    {
+      "type": "service_account",
+      "project_id": "testproject-cdsoplpIdsdsot",
+      "private_key_id": "3745ad16688cba9kl02b1ab7d4790139l29fj60ljj",
+      "private_key": "-----BEGIN PRIVATE KEY-----\nIUUEvAIBJUHYNkiumkiG9w0BAQEFAASNJJndidjsosjmEAAoIBAQCHHUIOIOnnnnnsusmUTPcD\nxe++oPK2lYk6rMUzaZj7fyN+URBC8p6kj8YsOIzXWtda6kWBsnEJqayyH8x\n2AWfT9OWW9cEob8S2JXinwPyM6oi094jpg8rPpa+Wus7GXA+xdat+HjNVN2i5pNc\n6WXHn4rvdPGg8eARkOTu+e7/7vEJGA/oO8yeHJHUfAKAUcn7u8z6OL240daRoUlm\n8e8qWs53vevZfA2ooY8Ps5xjUjl8GrsQWSZqcZZFBnBEyD8WdVG+pgyfxvfDjVzM\nJSP71qyTjVFL8vUabIca9a1a1QFyaAC4UbNO5Un09Yu9WPakDLy/vZD1P9dLlbh7\nU7pib1lZAgMBAAECggEAFXs5axpKEnGnzNIjwtw+QxAi15l00ZmQcAVp7I6NASAD\n/u6nhDANTWqJnWepwXAb6I5AGSpXbJyAVZFQ145lwkwAAosYmCHTikEHtoUfIueK\nix1oythSgZMa4ia3PzW7loG029wZbpdyd47oSTFY3OADUpTWq61EUz2lKWsDF7EU\noUq7IPLP/54HpMOlXvt1PvFDyH4aVxkiMKhjEjLKEhsYvLaGGTGhG077mwggEk4m\nTYyhiH7lb9daOQmi1xHsfYGkMd6pg0R+yhqD+96j7/4QtIIy5OgJLg7ks/q9D1rs\np65/iG9KKYxJ6aSfuTGg1hxsDzNAN+uoQcl6rFyg3QKBgQDqm0TL/oEANObuZDQh\nJwXH/JWL2aFABkdlsA6CEZmnYmmSt0emrN+CwabJz+I4c5plWOE3y/c6cnc6kcDi\nj7wMYHhwUmPmrLU3aTQzJzRj6NQInBQ94xymzWnTdHZzTTpoIoGvbV5hpkFBMrKG\nZQiyP6qMW19vm0ecCY8mZDupVwKBgQC5KoxTuzS5XT0orV8VG/xV5/MnXgvk2mxK\nvfpcfOPJV8zz1gAbAGpfwSI4KsIfIuh3/3B48nUddVOKZmpIUE89QoFyrlV1EW8O\nPEx9o8nhHKCOZVUscEa1gFhOiHKUij7diCtF9UqNpO+IXvCoqIvSOaPtcGpvolyR\nOXZE9np0zwKBgCCxpKO9AuMxfCEqq60XEBIvm/OST4tplJeSMmNj6oLODyJYEk8i\n9j71l7W2F7OAQLrw6OnqrbhibUUnPLcWCsG6y+3zPWLPHK3tJk4en4lwz+OnRJbf\nSIXiSGYka8FjuMj8ThBRcH6xOZTJaOGbwNt+TdkjfqhB/ne7SUyzWTEfAoGAVbDM\nGh/DqZjtqbp6CzHVWAgsreZHCNTQUtKSX2TooZABaEJ78AMEN2YQqP+YsIIeJRJQ\ngZhq/IQEckMtImQQF6CEeYcWQ0QbKfJbz7URwxzVbLCWdydKgcpwk39vzzAfIbRX\nmluG8gAHXgvZwaOmeVZ1d3eTui/gONDn28hZKV8CgYAcWneaVED2gsGIqku8oro9\nRsUsEKMZJ448QvyE1MGwMui2PhemtsVWWYXZHRtuJK7CUEtX7OXHzcTUarPrA0RY\nPs2fASUa4SWB5I/u/mp4ZubuwApzW0zcwYWVFAa6EPZ3Xv4DdfanyEr9F0/+iCVm\naRuJ49H4t7D9GZZbn2gitg==\n-----END PRIVATE KEY-----\n",
+      "client_email": "testproject-cdsoplpIdsdsot.gserviceaccount.com",
+      "client_id": "115631679040709515157",
+      "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+      "token_uri": "https://accounts.google.com/o/oauth2/token",
+      "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+      "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/testproject-cc-dsdsds%sddds.gserviceaccount.com"
+    } 
+    ``` 
+  version: 1.0.5
+  title: SHARK API Documentation
+  contact:
+    email: manoj.s@onmobile.com
+    name: Manoj Kumar S
+  x-logo:
+    url: 'shark.png'
+tags:
+  - name: configuration
+    description: API returns json reponse of settings in structured manner. Config settings like geography data, language, respective server URL, feature list per geography, service T&C latest vesions, service privacy latest  versions etc.
+  - name: user
+    description: Server must register user on client request and create profile. Authentication before allowing access to functions like user billing apis, user profile data, user subsctiption and purchase list data etc. 
+x-tagGroups:
+  - name: General
+    tags:
+      - configuration
+      - tags
+  - name: User Management
+    tags:
+      - user
+  - name: Content Management
+    tags:
+      - content
+  - name: Download Management
+    tags:
+      - download
+x-servers:
+  - url: http://dis.onmo.com/ringtone
+    description: Dev staging server
+  - url: https://shark.discover.onmo.com/ringtone
+    description: Production server
+paths:
+  /GetConfig:
+    get:
+      tags:
+        - configuration
+      summary: Get all configs
+      description: Returns an array of configs
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            $ref: '#/definitions/Configs'
+        '404':
+          description: Configs not found
+  /GetTags:
+    get:
+      tags:
+        - tags
+      summary: Get all tags
+      description: Returns an array of tags/channels
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            $ref: '#/definitions/tagsmultiple'
+        '404':
+          description: Channels not found
+  /RegisterUser:
+    post:
+      tags:
+        - user
+      summary: Register or Update User
+      description: The user is first authenticated with the firebase token given by the client against the firebase server. If the token is valid the user is registered in the shark server.If the user already exists, once authenticated the profile of the user will be updated.
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: Request for registration of the user
+          required: true
+          schema:
+            $ref: '#/definitions/RegisterUserRequest'
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: object
+            properties: 
+              registered-user:
+                description: status of the registration
+                type: boolean
+        '401':
+          description: firebase token is incorrect
+          schema:
+            type: object
+            properties: 
+              response:
+                description: status of cancellation 
+                type: object
+                properties: 
+                  registered-user:
+                    description: Failure
+                    type: boolean
+                    example: false
+                  reason:
+                    description: Reason of failure
+                    type: string
+                    example: Firebase ID token has expired or is not yet valid. Get a fresh token from your client app and try again
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/400_response'
+  /CancelRegistration:
+    post:
+      tags: 
+        - user
+      summary: Cancel User Registration 
+      description: This API is used to cancel registration. ( auto-renewed subscription can not be cancelled on registartion cancellation so client needs to handle it appropriately ). On cancellation of user regn, user data  cannot be accessible by client unless user re-registers.
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: Request Body for cancellation of User Registration
+          schema:
+            type: object
+            properties:
+              firebase_uid:
+                description: User specific firebase_uid provided by the firebase server
+                type: string
+                example: Fz3X8h6hjdoTh487jkkIjJ
+              firebase_token: 
+                description: Temporary token from firebase to validate a user
+                type: string
+                example: asdsX8h6hjdoTh487jkasg7tfdgas8g7tfg7tfq3eyq8gyFz3X8h6hjdoTh487jkkIjJ
+            required:
+              - firebase_uid
+              - firebase_token
+      responses: 
+        '200':
+          description: successful operation
+          schema:
+            type: object
+            properties: 
+              removed-user:
+                description: status of cancellation 
+                type: boolean
+        '304':
+          description: if the given change was not done
+          schema:
+            type: object
+            properties: 
+              response:
+                description: status of cancellation 
+                type: object
+                properties: 
+                  status:
+                    description: Failure
+                    type: string
+                    example: failure
+                  reason:
+                    description: Reason of failure
+                    type: string
+                    example: User not removed...Please check logs for further information...
+        '404': 
+          description: API not found or Server Down or user not found
+          schema:
+            type: object
+            properties: 
+              response:
+                description: status of cancellation 
+                type: object
+                properties: 
+                  status:
+                    description: Failure
+                    type: string
+                    example: failure
+                  reason:
+                    description: Reason of failure
+                    type: string
+                    example: User doesn't exist!!!
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/400_response'
+        '401':
+          description: firebase token is incorrect
+          schema:
+            type: object
+            properties: 
+              response:
+                description: status of cancellation 
+                type: object
+                properties: 
+                  status:
+                    description: Failure
+                    type: string
+                    example: failure
+                  reason:
+                    description: Reason of failure
+                    type: string
+                    example: Firebase ID token has expired or is not yet valid. Get a fresh token from your client app and try again
+  /GetUserProfile:
+    post:
+      tags: 
+        - user
+      summary: Get User Information 
+      description: This api provides user profile data, user download count in the current subscription cycle and remaining download count available. These infomation will be provided only after the authentication of the firebase token. If authentication fails or the user does not exist in the server, reponse will be returned as not a valid token or user does not exist. 
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: Request Body for retrieving of User Information
+          schema:
+            type: object
+            properties:
+              firebase_uid:
+                description: User specific firebase_uid provided by the firebase server
+                type: string
+                example: Fz3X8h6hjdoTh487jkkIjJ
+              firebase_token: 
+                description: Temporary token from firebase to validate a user
+                type: string
+                example: asdsX8h6hjdoTh487jkasg7tfdgas8g7tfg7tfq3eyq8gyFz3X8h6hjdoTh487jkkIjJ
+            required:
+              - firebase_uid
+              - firebase_token
+      responses: 
+        '200':
+          description: successful operation
+          schema:
+             $ref: '#/definitions/UserProfile'
+        '404': 
+          description: API not found or Server Down or user not found
+          schema:
+            type: object
+            properties: 
+              response:
+                description: status of cancellation 
+                type: object
+                properties: 
+                  status:
+                    description: Failure
+                    type: string
+                    example: failure
+                  reason:
+                    description: Reason of failure
+                    type: string
+                    example: User doesn't exist!!!
+        '401':
+          description: firebase token is incorrect
+          schema:
+            type: object
+            properties: 
+              response:
+                description: status of cancellation 
+                type: object
+                properties: 
+                  status:
+                    description: Failure
+                    type: string
+                    example: failure
+                  reason:
+                    description: Reason of failure
+                    type: string
+                    example: Firebase ID token has expired or is not yet valid. Get a fresh token from your client app and try again
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/400_response'
+  /UpdateSubscription:
+    post:
+      tags: 
+        - user
+      summary: Update User Subscription 
+      description: This API is used to update user subscription. The service subscribed by the user must be cancelled before calling CancelRegistration api.
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: Request Body for updating user subscription
+          schema:
+            $ref: '#/definitions/Updatesubscription'
+      responses: 
+        '200':
+          description: successful operation
+          schema:
+            type: object
+            properties: 
+              subscription-updated:
+                description: status of subscription update 
+                type: boolean
+        '404': 
+          description: API not found or Server Down or user not found
+          schema:
+            type: object
+            properties: 
+              response:
+                description: status of cancellation 
+                type: object
+                properties: 
+                  status:
+                    description: Failure
+                    type: string
+                    example: failure
+                  reason:
+                    description: Reason of failure
+                    type: string
+                    example: User doesn't exist!!!
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/400_response'
+        '401':
+          description: firebase token is incorrect
+          schema:
+            type: object
+            properties: 
+              response:
+                description: status of cancellation 
+                type: object
+                properties: 
+                  status:
+                    description: Failure
+                    type: string
+                    example: failure
+                  reason:
+                    description: Reason of failure
+                    type: string
+                    example: Firebase ID token has expired or is not yet valid. Get a fresh token from your client app and try again
+  /GetContent:
+    get:
+      tags: 
+        - content
+      summary: Returns array of merchandized content
+      description: |
+        This api will be used by client to retrive merchandized content store structured along with content list. Result supports pagination.
+    
+        The GetContent api will be working in 5 different ways based on the parameters which you send. Please consider firebaseuid and limit as mandatory in all the 5 cases, different ways are as follows:-
+        
+            a.  When no parameters are send, the api will give only the merchandised contents. To fetch more contents(pagination), we will be sending offsetkey in response. So, you need to append the offsetkey in response to get more contents.
+      
+            b.  To get contents related to a particular channelid, you need to send channelid. The response will have the contents of that particular channel along with the offsetkey, which will be used to get more contents.
+      
+            c.  To get the contents based on Search, you need to pass the keyword which needs to be searched(For eg:- Shape Of You) with a parameter mood as false. The response will have the contents along with offsetkey and sessionId. You have to append offsetkey and sessionId in subsequent hits to get more contents. For the first hit, we don’t need sessionId as MSearch will treat the request as first request and give the results accordingly.  To get more results on the same search, they need sessionId. So, you need to store that sessionId and pass the same sessionId to get more results.
+      
+            d.  To get the contents based on Mood, you need to pass the keyword which needs to be searched(For eg:- Dance) with a parameter mood as true. The response will have the contents along with offsetkey and sessionId. You have to append offsetkey and sessionId in subsequent hits to get more contents. For the first hit, we don’t need sessionId as MSearch will treat the request as first request and give the results accordingly.  To get more results on the same search, they need sessionId. So, you need to store that sessionId and pass the same sessionId to get more results.
+            
+            e.  To get contents where full track is mandatory, an additional parameter cut_allowed with value 1 should be sent else to get only the freetunes contents(which does not have any full track) cut_allowed with value 0 needs to be sent. If no value is passed, then both types of contents will be sent.
+
+
+        # Offsetkey 
+          This key will be returned as part of response. Offsetkey is not required for retrieving contents for the first time. It is used for pagination, where the next array of contents after the offsetkey will be returned to avoid duplicates.
+        # Channelid
+          Genre ID, which is an optional parameter used when the array of contents belonging to same genre needs to be returned .
+      operationId: getContent
+      produces:
+        - application/json
+      parameters:
+        - name: firebase_uid
+          in: query
+          description: firebase_uid of the user
+          required: true
+          type: string
+        - name: limit
+          in: query
+          description: number of contents to be returned
+          required: true
+          type: integer
+        - name: offset
+          in: query
+          description: key required to give next set of contents
+          type: integer
+        - name: channelid
+          in: query
+          description: get contents that belongs to a single genre
+          type: string
+        - name: keyword
+          in: query
+          description: keyword to be searched
+          type: string
+        - name: mood
+          in: query
+          description: used to differentiate if it is mood search or normal keyword search
+          type: boolean
+        - name: session_id
+          in: query
+          description: required for pagination
+          type: string
+        - name: cut_allowed
+          in: query
+          description: required to differentiate between full track contents(value will be 1) and non-full track contents(value will be 0)
+          type: integer
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            $ref: '#/definitions/getcontents'
+        '404': 
+          description: API not found or Server Down or user not found
+          schema:
+            type: object
+            properties: 
+              response:
+                description: status of cancellation 
+                type: object
+                properties: 
+                  status:
+                    description: Failure
+                    type: string
+                    example: failure
+                  reason:
+                    description: Reason of failure
+                    type: string
+                    example: User doesn't exist!!!
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/400_response'
+  /GetContentInfo:
+    get:
+      tags: 
+        - content
+      summary: Returns complete metadata of a single content
+      description: ''
+      operationId: getContentInfo
+      produces:
+        - application/json
+      parameters:
+        - name: firebase_uid
+          in: query
+          description: firebase_uid of the user
+          required: true
+          type: string
+        - name: contentid
+          in: query
+          description: contentid id of the content to be retrieved
+          required: true
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: object
+            properties:
+                content:
+                  description: content object
+                  type: array   
+                  items:
+                    -  $ref: '#/definitions/smallcontent2'
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/400_response'
+        '500':
+          description: If the contentid is incorrect
+          schema:
+            $ref: '#/definitions/500_response'
+        '404': 
+          description: API not found or Server Down or user not found
+          schema:
+            type: object
+            properties: 
+              response:
+                description: status of cancellation 
+                type: object
+                properties: 
+                  status:
+                    description: Failure
+                    type: string
+                    example: failure
+                  reason:
+                    description: Reason of failure
+                    type: string
+                    example: User doesn't exist!!!
+  /UpdateContentDownloadStatusForRT:
+    post:
+      tags: 
+        - download
+      summary: Update users content download status
+      description: ''
+      operationId: updateDownloadStatus
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: Request for multiple contents
+          required: true
+          schema:
+            $ref: '#/definitions/downloadrequest'
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: object
+            properties: 
+              status:
+                description: status of operation 
+                type: string
+                example: success
+        '401':
+          description: firebase token is incorrect
+          schema:
+            type: object
+            properties: 
+              response:
+                description: status of cancellation 
+                type: object
+                properties: 
+                  status:
+                    description: Failure
+                    type: string
+                    example: failure
+                  reason:
+                    description: Reason of failure
+                    type: string
+                    example: Firebase ID token has expired or is not yet valid. Get a fresh token from your client app and try again
+        '404': 
+          description: API not found or Server Down or user not found
+          schema:
+            type: object
+            properties: 
+              response:
+                description: status of cancellation 
+                type: object
+                properties: 
+                  status:
+                    description: Failure
+                    type: string
+                    example: failure
+                  reason:
+                    description: Reason of failure
+                    type: string
+                    example: User doesn't exist with the given firebaseUid Ek2uQFCpTShsiXpzvW4ucpxGlP53
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/400_response'
+        '304':
+          description: if the given change was not done
+          schema:
+            type: object
+            properties: 
+              response:
+                description: status of cancellation 
+                type: object
+                properties: 
+                  status:
+                    description: Failure
+                    type: string
+                    example: failure
+                  reason:
+                    description: Reason of failure
+                    type: string
+                    example: failed to update the database!!!
+  /GetDownloadHistory:
+    post:
+      tags: 
+        - download
+      summary: Get User Download Information 
+      description: This api returns download history based on time period or subscription cycle like current subscription cycle
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: Request Body for retrieving of User Information
+          schema:
+            type: object
+            properties:
+              firebase_uid:
+                description: User specific firebase_uid provided by the firebase server
+                type: string
+                example: Fz3X8h6hjdoTh487jkkIjJ
+              firebase_token: 
+                description: Temporary token from firebase to validate a user
+                type: string
+                example: asdsX8h6hjdoTh487jkasg7tfdgas8g7tfg7tfq3eyq8gyFz3X8h6hjdoTh487jkkIjJ
+              start_date: 
+                description: Date from which you want to get the downloaded contents from
+                type: string
+                format: date-time
+                example: 2017-03-03 11:45:00
+              end_date: 
+                description: Date to which you want to get the download to
+                type: string
+                format: date-time
+                example: 2018-03-03 11:45:00
+              limit: 
+                description: limit
+                type: integer
+                format: int32
+                example: 5
+              offset: 
+                description: offset
+                type: integer
+                format: int32
+                example: 5
+            required:
+            - firebase_uid
+            - firebase_token
+            - start_date
+            - end_date
+            - limit
+      responses: 
+        '200':
+          description: successful operation
+          schema:
+            $ref: '#/definitions/getdownloadedcontents'
+        '404': 
+          description: API not found or Server Down or user not found
+          schema:
+            type: object
+            properties: 
+              response:
+                description: status of cancellation 
+                type: object
+                properties: 
+                  status:
+                    description: Failure
+                    type: string
+                    example: failure
+                  reason:
+                    description: Reason of failure
+                    type: string
+                    example: User doesn't exist!!!
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/400_response'
+        '401':
+          description: firebase token is incorrect
+          schema:
+            type: object
+            properties: 
+              response:
+                description: status of cancellation 
+                type: object
+                properties: 
+                  status:
+                    description: Failure
+                    type: string
+                    example: failure
+                  reason:
+                    description: Reason of failure
+                    type: string
+                    example: Firebase ID token has expired or is not yet valid. Get a fresh token from your client app and try again
+  /CheckDownloadStatus:
+    post:
+      tags: 
+        - download
+      summary: Check whether User is allowed to Download
+      description: This api returns a boolean value true or false, where true implies the user is allowed to download and has not reached his subscription limit. False means the user is not allowed to download, user might have reached his download limit or is not subscribed to any subscription.
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: Request Body for retrieving status whether user is allowed to download or not
+          schema:
+            type: object
+            properties:
+              firebase_uid:
+                description: User specific firebase_uid provided by the firebase server
+                type: string
+                example: Fz3X8h6hjdoTh487jkkIjJ
+              firebase_token: 
+                description: Temporary token from firebase to validate a user
+                type: string
+                example: asdsX8h6hjdoTh487jkasg7tfdgas8g7tfg7tfq3eyq8gyFz3X8h6hjdoTh487jkkIjJ
+            required:
+            - firebase_uid
+            - firebase_token
+      responses: 
+        '200':
+          description: successful operation
+          schema:
+            type: object
+            properties: 
+              download_allowed:
+                description: is download allowed
+                type: boolean
+                default: true
+              download_count:
+                description: Current download count of the user
+                type: integer
+                example: 15
+              download_limit:
+                description: Maximum download allowed to the user
+                type: integer
+                default: 100
+        '404': 
+          description: API not found or Server Down or user not found
+          schema:
+            type: object
+            properties: 
+              response:
+                description: status of cancellation 
+                type: object
+                properties: 
+                  status:
+                    description: Failure
+                    type: string
+                    example: failure
+                  reason:
+                    description: Reason of failure
+                    type: string
+                    example: User doesn't exist!!!
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/400_response'
+        '401':
+          description: firebase token is incorrect
+          schema:
+            type: object
+            properties: 
+              response:
+                description: status of cancellation 
+                type: object
+                properties: 
+                  status:
+                    description: Failure
+                    type: string
+                    example: failure
+                  reason:
+                    description: Reason of failure
+                    type: string
+                    example: Firebase ID token has expired or is not yet valid. Get a fresh token from your client app and try again
+definitions:
+  Config:
+    type: object   
+    properties:
+        module:
+          description: module of the config
+          type: string
+          example: BASEURL
+        name:
+          description: name of the config
+          type: string
+          example: clips_artwork_url
+        value:
+          description: value of the config
+          type: string
+          example: https://prodvolt.use.express.onmo.com/catalog/v3/image?width=500&target=s3://omd2cnamatlantis/ARTWORK/
+        os_type:
+          description: os which uses the config
+          type: string
+          example: Android
+  Config2:
+    type: object   
+    properties:
+        module:
+          description: module of the config
+          type: string
+          example: INCREMENTAL_DOWNLOAD
+        name:
+          description: name of the config
+          type: string
+          example: dyk_max_download_limit
+        value:
+          description: value of the config
+          type: string
+          example: 4
+        os_type:
+          description: os which uses the config
+          type: string
+          example: Android
+  Configs:
+    type: array   
+    items:
+      -  $ref: '#/definitions/Config'
+      -  $ref: '#/definitions/Config2'
+  RegisterUserRequest:
+    type: object
+    properties:     
+      uid:
+        description: IMEI of the mobile
+        type: integer
+        example: 3893
+        format: int64
+      username: 
+        description: User supplied username
+        type: string
+        minLength: 4
+        example: BruceLee
+      mobileno:
+        description: Mobile number
+        type: integer
+        format: int64
+        example: 7204570969
+      email:
+        description: User email address
+        type: string
+        format: email
+        example: bruce.lee@example.com
+      firebase_uid:
+        description: User specific firebase_uid provided by the firebase server
+        type: string
+        example: Fz3X8h6hjdoTh487jkkIjJ
+      firebase_token: 
+        description: Temporary token from firebase to validate a user
+        type: string
+        example: asdsX8h6hjdoTh487jkasg7tfdgas8g7tfg7tfq3eyq8gyFz3X8h6hjdoTh487jkkIjJ
+      firebase_login_channel: 
+        description: login channel used by user
+        type: string
+        example: facebook
+      facebook_id:
+        description: facebook_id
+        type: string
+        format: string
+        example: bruceLee
+      twitter_handle:
+        description: Twitter Handle
+        type: string
+        example: '@bruceLee'
+      profile_url:
+        description: Absolute url of the profile image
+        type: string
+        example: https://cdn.shopify.com/s/files/1/0665/7895/files/col_BL.jpg?5788331761803984328
+      mcc:
+        description: MCC code
+        type: integer
+        format: int32
+        example: 404
+      mnc:
+        description: MNC code
+        type: integer
+        format: int32
+        example: 58
+      app_version:
+        description: Version of the app
+        type: string
+        example: 2.0.2
+      os_version:
+        description: OS version of mobile
+        type: string
+        example: OxygenOS 4.0.3
+      password_modified: 
+        description: Password modified time
+        type: string
+        format: date-time
+        example: 2017-03-27 19:45:00
+      photo_modified:
+        description: Photo modified time
+        type: string
+        format: date-time
+        example: 2017-03-27 19:45:00
+      player_id:
+        description: ID used for sending Push Notification
+        type: string
+        example: asdsX8h6hjdoTh487jkasg7tfdgas8g7tfg7tfq3eyq8gyFz3X8h6hjdoTh487jkkIjJ
+    required:
+      - firebase_uid
+      - uid
+      - firebase_token
+      - mcc
+      - app_version
+  UserProfile:
+    type: object
+    properties: 
+      profile:
+            description: Profile Information of the user
+            allOf:
+              - $ref: '#/definitions/User'
+      user_subscription:
+            description: Subscription details of the user
+            allOf:
+              - $ref: '#/definitions/Subscription'
+  User:
+    type: object
+    properties:     
+      uid:
+        description: IMEI of the mobile
+        type: integer
+        example: 3893
+        format: int64
+      username: 
+        description: User supplied username
+        type: string
+        minLength: 4
+        example: BruceLee
+      mobileno:
+        description: Mobile number
+        type: integer
+        format: int64
+        example: 7204570969
+      email:
+        description: User email address
+        type: string
+        format: email
+        example: bruce.lee@example.com
+      firebase_uid:
+        description: User specific firebase_uid provided by the firebase server
+        type: string
+        example: Fz3X8h6hjdoTh487jkkIjJ
+      facebook_id:
+        description: facebook_id
+        type: string
+        format: string
+        example: bruceLee
+      twitter_handle:
+        description: Twitter Handle
+        type: string
+        example: '@bruceLee'
+      profile_url:
+        description: Absolute url of the profile image
+        type: string
+        example: https://cdn.shopify.com/s/files/1/0665/7895/files/col_BL.jpg?5788331761803984328
+      mcc:
+        description: MCC code
+        type: integer
+        format: int32
+        example: 404
+      mnc:
+        description: MNC code
+        type: integer
+        format: int32
+        example: 58
+      app_version:
+        description: Version of the app
+        type: string
+        example: 2.0.2
+      os_version:
+        description: OS version of mobile
+        type: string
+        example: OxygenOS 4.0.3
+  Subscription:
+    type: object
+    properties:
+      subscription_id:
+        description: Product ID of Subscription
+        type: string
+        example: onmo_premium_subscription
+      number_of_downloads:
+        description: Downloaded count of user in the subscription cycle
+        type: integer
+        format: int32
+        example: 25
+      subscription_start_date:
+        description: start date of the subscription
+        type: string
+        format: date-time
+        example: 2017-03-25 19:45:00
+      subscription_end_date:
+        description: expiry date of the subscription
+        type: string
+        format: date-time
+        example: 2017-03-27 19:45:00
+      subscription_type:
+        description: Status of Subscription
+        type: string
+        example: SUBSCRIPTION_PURCHASED
+  Updatesubscription:
+    type: object
+    properties:
+      subscription_id:
+        description: Product ID of Subscription
+        type: string
+        example: onmo_premium_subscription
+      firebase_uid:
+        description: User specific firebase_uid provided by the firebase server
+        type: string
+        example: Fz3X8h6hjdoTh487jkkIjJ
+      firebase_token: 
+        description: Temporary token from firebase to validate a user
+        type: string
+        example: asdsX8h6hjdoTh487jkasg7tfdgas8g7tfg7tfq3eyq8gyFz3X8h6hjdoTh487jkkIjJ
+      subscription_type:
+        description: Status of Subscription and it must be any of SUBSCRIPTION_PURCHASED, SUBSCRIPTION_RENEWED, SUBSCRIPTION_CANCELLED
+        type: string
+        example: SUBSCRIPTION_PURCHASED
+    required:
+      - firebase_uid
+      - firebase_token
+      - subscription_id
+      - subscription_type
+  smallcontent:
+    type: object
+    properties:
+      songname:
+        description: Song name
+        type: string
+        example: Bad Mood
+      singer:
+        description: Artist name
+        type: string
+        example: Miley Cyrus
+      artworkurl:
+        description: Relative URL of the artwork
+        type: string
+        example: 8a1b8d2b5fe16d15016031eba8bb5e15.jpg
+      content_url_ft:
+        description: Relative URL of the content
+        type: string
+        example: 8a1b8d2b5f023c7f015f0a552b8b1cc4.aac
+      content_url_rt:
+        description: Relative rbt URL of the content
+        type: string
+        example: rbt_28736122_rbt.aac
+      song_teaser: 
+        description: Song Teaser
+        type: string
+        example: Can you see why some people mistakenly think this song is about suicide?
+      song_trivia: 
+        description: Song Trivia
+        type: string
+        example: Despite this song never being a major hit (its biggest success was making the UK top 40), it became one of Tom Petty and The Heartbreakers’ most popular tracks. The Heartbreakers’ guitarist Mike Campbell told Songfacts.com that some people mistakenly think it is about suicide, whereas it’s actually a “really beautiful love song” with “some Florida imagery.”
+      context_start_date: 
+        description: Context Start Date
+        type: string
+        format: date-time
+        example:
+      context_end_date: 
+        description: Context End Date
+        type: string
+        format: date-time
+        example:
+      song_tags: 
+        description: Column name in Atlantis for MOOD (Genre/TAGS) 
+        type: string
+        example: Pop
+      charge_class: 
+        description: Defines the type of the content ( Premium or FREE) 
+        type: string
+        example: Premium
+      subtype: 
+        description: subtype
+        type: string
+        example: RINGBACK_MUSICTUNE
+      parental_advisory: 
+        description: Explicit content  
+        type: string
+        example: 
+      contentid: 
+        description: Content ID
+        type: string
+        example: f5576271af3d11dd00c6240a86ee76da
+      contentorder: 
+        description: Content merchandized order
+        type: string
+        example: 636
+      isrc: 
+        description: ISRC of the song
+        type: string
+        example: USRC11700145
+      cut_allowed: 
+        description: ISRC of the song
+        type: string
+        format: int
+        example: 1
+      label_name: 
+        description: Label the song belongs to
+        type: string
+        example: Sony Music
+      marketing_label: 
+        description: marketing label of the song
+        type: string
+        example: Sony Music
+  smallcontent1:
+    type: object
+    properties:
+      songname:
+        description: Song name
+        type: string
+        example: Bad Guys Win
+      singer:
+        description: Artist name
+        type: string
+        example: Matthew Good
+      artworkurl:
+        description: Relative URL of the artwork
+        type: string
+        example: 8a1b8d2b5fe16d15016031eba8bb5e15.jpg
+      content_url_rt:
+        description: Relative URL of the content
+        type: string
+        example: 8a1b8d2b5f023c7f015f0a552b8b1cc4.aac
+      content_url_ft:
+        description: Relative URL of the content
+        type: string
+        example: 8a1b8d2b5f023c7f015f0a552b8b1cc4.aac
+      song_teaser: 
+        description: song Teaser
+        type: string
+        example: Do you know what inspired Jimi Hendrix to record Purple Haze?
+      song_trivia: 
+        description: song Trivia
+        type: string
+        example: <p>On this day in 1967, The Jimi Hendrix Experience recorded UK number-three hit <em>Purple Haze</em> at De Lane Lea studios in London. Hendrix later stated it was about a dream in which he was walking under the sea. In concert, he sometimes substituted lyrics for comic effect; &ldquo;&rsquo;scuse me while I kiss the sky&rdquo; was rendered &quot;&#39;scuse me while I kiss this guy&quot; (while gesturing towards his drummer Mitch Mitchell).</p>
+      context_start_date: 
+        description: Context Start Date
+        type: string
+        format: date-time
+        example: 2018-01-11 00:00:00
+      context_end_date: 
+        description: Context End Date
+        type: string
+        format: date-time
+        example: 2018-01-11 00:00:00
+      song_tags: 
+        description: Column name in Atlantis for MOOD (Genre/TAGS) 
+        type: string
+        example: 
+      charge_class: 
+        description: Defines the type of the content ( Premium or FREE) 
+        type: string
+        example: Premium
+      subtype: 
+        description: subtype
+        type: string
+        example: 
+      parental_advisory: 
+        description: Explicit content  
+        type: string
+        example: 
+      contentid: 
+        description: Content ID
+        type: string
+        example: f5576271af3d11dd00c6240a86ee76da
+      content_order: 
+        description: Content merchandized order
+        type: string
+        example: 635
+      isrc: 
+        description: ISRC of the song
+        type: string
+        example: USRC11700145
+      cut_allowed: 
+        description: ISRC of the song
+        type: string
+        format: int
+        example: 1
+      label_name: 
+        description: Label the song belongs to
+        type: string
+        example: Sony Music
+      marketing_label: 
+        description: marketing label of the song
+        type: string
+        example: Sony Music
+  smallcontent2:
+    type: object
+    properties:
+      songname:
+        description: Song name
+        type: string
+        example: Bad Moon Rising
+      singer:
+        description: Artist name
+        type: string
+        example: Mourning Ritual feat. Peter Dreimanis
+      artworkurl:
+        description: Relative URL of the artwork
+        type: string
+        example: 8a1b8d2b5fe16d15016031eba8bb5e15.jpg
+      content_url_rt:
+        description: Relative URL of the content
+        type: string
+        example: 8a1b8d2b5f023c7f015f0a552b8b1cc4.aac
+      content_url_ft:
+        description: Relative URL of the content
+        type: string
+        example: 8a1b8d2b5f023c7f015f0a552b8b1cc4.aac
+      song_teaser: 
+        description: Song Teaser
+        type: string
+        example: Do you know what inspired Jimi Hendrix to record Purple Haze?
+      song_trivia: 
+        description: Song Trivia
+        type: string
+        example: <p>On this day in 1967, The Jimi Hendrix Experience recorded UK number-three hit <em>Purple Haze</em> at De Lane Lea studios in London. Hendrix later stated it was about a dream in which he was walking under the sea. In concert, he sometimes substituted lyrics for comic effect; &ldquo;&rsquo;scuse me while I kiss the sky&rdquo; was rendered &quot;&#39;scuse me while I kiss this guy&quot; (while gesturing towards his drummer Mitch Mitchell).</p>
+      song_tags: 
+        description: Column name in Atlantis for MOOD (Genre/TAGS) 
+        type: string
+        example: 
+      charge_class: 
+        description: Defines the type of the content ( Premium or FREE) 
+        type: string
+        example: Premium
+      subtype: 
+        description: subtype
+        type: string
+        example: 
+      parental_advisory: 
+        description: Explicit content  
+        type: string
+        example: 
+      contentid: 
+        description: Content ID
+        type: string
+        example: f5576271af3d11dd00c6240a86ee76da
+      isrc: 
+        description: ISRC of the song
+        type: string
+        example: USRC11700145
+      cut_allowed: 
+        description: ISRC of the song
+        type: string
+        format: int
+        example: 1
+      label_name: 
+        description: Label the song belongs to
+        type: string
+        example: Sony Music
+      marketing_label: 
+        description: marketing label of the song
+        type: string
+        example: Sony Music
+  smallcontent3:
+    type: object
+    properties:
+      songname:
+        description: Song name
+        type: string
+        example: Bad Moon Rising
+      singer:
+        description: Artist name
+        type: string
+        example: Mourning Ritual feat. Peter Dreimanis
+      artworkurl:
+        description: Relative URL of the artwork
+        type: string
+        example: 8a1b8d2b5fe16d15016031eba8bb5e15.jpg
+      content_url_rt:
+        description: Relative URL of the content
+        type: string
+        example: 8a1b8d2b5f023c7f015f0a552b8b1cc4.aac
+      content_url_ft:
+        description: Relative URL of the content
+        type: string
+        example: 8a1b8d2b5f023c7f015f0a552b8b1cc4.aac
+      song_teaser: 
+        description: Song Teaser
+        type: string
+        example: Do you know what inspired Jimi Hendrix to record Purple Haze?
+      song_trivia: 
+        description: Song Trivia
+        type: string
+        example: <p>On this day in 1967, The Jimi Hendrix Experience recorded UK number-three hit <em>Purple Haze</em> at De Lane Lea studios in London. Hendrix later stated it was about a dream in which he was walking under the sea. In concert, he sometimes substituted lyrics for comic effect; &ldquo;&rsquo;scuse me while I kiss the sky&rdquo; was rendered &quot;&#39;scuse me while I kiss this guy&quot; (while gesturing towards his drummer Mitch Mitchell).</p>
+      song_tags: 
+        description: Column name in Atlantis for MOOD (Genre/TAGS) 
+        type: string
+        example: 
+      charge_class: 
+        description: Defines the type of the content ( Premium or FREE) 
+        type: string
+        example: Premium
+      subtype: 
+        description: subtype
+        type: string
+        example: 
+      parental_advisory: 
+        description: Explicit content  
+        type: string
+        example: 
+      contentid: 
+        description: Content ID
+        type: string
+        example: f5576271af3d11dd00c6240a86ee76da
+      isrc: 
+        description: ISRC of the song
+        type: string
+        example: USRC11700145
+      cut_allowed: 
+        description: ISRC of the song
+        type: string
+        format: int
+        example: 1
+      cut_start_time: 
+        description: ISRC of the song
+        type: string
+        format: int32
+        example: 7634873
+      cut_end_time: 
+        description: ISRC of the song
+        type: string
+        format: int32
+        example: 76346382
+      subscription_id: 
+        description: Subscription id with which the song was downloaded
+        type: string
+        example: 123
+      downloadedtime:
+        description: Time at which the content was downloded
+        type: string
+        format: date-time
+        example: 2018-04-18 12:47:12
+      label_name: 
+        description: Label the song belongs to
+        type: string
+        example: Sony Music
+      marketing_label: 
+        description: marketing label of the song
+        type: string
+        example: Sony Music
+  smallcontent4:
+    type: object
+    properties:
+      songname:
+        description: Song name
+        type: string
+        example: Bad Moon Rising
+      singer:
+        description: Artist name
+        type: string
+        example: Mourning Ritual feat. Peter Dreimanis
+      artworkurl:
+        description: Relative URL of the artwork
+        type: string
+        example: 8a1b8d2b5fe16d15016031eba8bb5e15.jpg
+      content_url_rt:
+        description: Relative URL of the content
+        type: string
+        example: 8a1b8d2b5f023c7f015f0a552b8b1cc4.aac
+      content_url_ft:
+        description: Relative URL of the content
+        type: string
+        example: 8a1b8d2b5f023c7f015f0a552b8b1cc4.aac
+      song_teaser: 
+        description: Song Teaser
+        type: string
+        example: Do you know what inspired Jimi Hendrix to record Purple Haze?
+      song_trivia: 
+        description: Song Trivia
+        type: string
+        example: <p>On this day in 1967, The Jimi Hendrix Experience recorded UK number-three hit <em>Purple Haze</em> at De Lane Lea studios in London. Hendrix later stated it was about a dream in which he was walking under the sea. In concert, he sometimes substituted lyrics for comic effect; &ldquo;&rsquo;scuse me while I kiss the sky&rdquo; was rendered &quot;&#39;scuse me while I kiss this guy&quot; (while gesturing towards his drummer Mitch Mitchell).</p>
+      song_tags: 
+        description: Column name in Atlantis for MOOD (Genre/TAGS) 
+        type: string
+        example: 
+      charge_class: 
+        description: Defines the type of the content ( Premium or FREE) 
+        type: string
+        example: Premium
+      subtype: 
+        description: subtype
+        type: string
+        example: 
+      parental_advisory: 
+        description: Explicit content  
+        type: string
+        example: 
+      contentid: 
+        description: Content ID
+        type: string
+        example: f5576271af3d11dd00c6240a86ee76da
+      isrc: 
+        description: ISRC of the song
+        type: string
+        example: USRC11700145
+      cut_allowed: 
+        description: ISRC of the song
+        type: string
+        format: int
+        example: 1
+      cut_start_time: 
+        description: ISRC of the song
+        type: string
+        format: int32
+        example: 7634873
+      cut_end_time: 
+        description: ISRC of the song
+        type: string
+        format: int32
+        example: 76346382
+      subscription_id: 
+        description: Subscription id with which the song was downloaded
+        type: string
+        example: 123
+      downloadedtime:
+        description: Time at which the content was downloded
+        type: string
+        format: date-time
+        example: 2018-04-18 12:47:12
+      label_name: 
+        description: Label the song belongs to
+        type: string
+        example: Sony Music
+      marketing_label: 
+        description: marketing label of the song
+        type: string
+        example: Sony Music
+  fullcontent1:
+    type: object
+    properties:
+      contentid:
+        description: Content Id
+        type: string
+        example: bfef758ac4d97301912ac12100c21d49
+      song_name:
+        description: Song Name
+        type: string
+        example: American Girl
+      language:
+        description: Language
+        type: string
+        example: English
+      movie_name:
+        description: Movie Name
+        type: string
+        example: Tom Petty & The Heartbreakers
+      singer:
+        description: Singer
+        type: string
+        example: Tom Petty And The Heartbreakers
+      actor:
+        description: Actor
+        type: string
+        example: Tom Petty And The Heartbreakers
+      isrc:
+        description: Isrc code
+        type: string
+        example: USMC17641688
+      genre:
+        description: Genre
+        type: string
+        example: null
+      artwork_url:
+        description: Artwork url
+        type: string
+        example: 8a1b8d2b61d7c831016206721e550822.jpg
+      content_url:
+        description: Content url
+        type: string
+        example: 8a1b8d2b61d7c831016206721e550822.m4a
+      promo_code:
+        description: Promo Code
+        type: string
+        example: 10348251
+      content_provider:
+        description: Content provider
+        type: string
+        example: Warner
+      rights_body:
+        description: Rights Body
+        type: string
+        example: ONMOBILE
+      label_name:
+        description: Label Name
+        type: string
+        example: Onmobile
+      song_release_date:
+        description: Song Release Date
+        type: string
+        format: date-time
+        example: null
+      movie_release_date:
+        description: Movie Release Date
+        type: string
+        format: date-time
+        example: null
+      start_date:
+        description: Start Date
+        type: string
+        format: date-time
+        example: 2018-03-08 00:00:00
+      end_date:
+        description: End Date
+        type: string
+        format: date-time
+        example: 2038-03-08 00:00:00
+      song_trivia:
+        description: Song Trivia
+        type: string
+        example: Despite this song never being a major hit (its biggest success was making the UK top 40), it became one of Tom Petty and The Heartbreakers’ most popular tracks. The Heartbreakers’ guitarist Mike Campbell told Songfacts.com that some people mistakenly think it is about suicide, whereas it’s actually a “really beautiful love song” with “some Florida imagery.”
+      content_url_rt:
+        description: Content Url RT
+        type: string
+        example: null
+      content_url_ft:
+        description: Content Url FT
+        type: string
+        example: null
+      song_twitter_text:
+        description: Song Twitter Text
+        type: string
+        example: null
+      spotify_handle:
+        description: SpotifyID
+        type: string
+        example: spotify:track:7MRyJPksH3G2cXHN8UKYzP
+      itunes_handle:
+        description: ItunesID
+        type: string
+        example: 892461953
+      playmusic_handle:
+        description: PlaymusicID
+        type: string
+        example: 
+      amazonmusic_handle:
+        description: AmazonmusicID
+        type: string
+        example: 
+      modified_time:
+        description: Modified Time
+        type: string
+        format: date-time
+        example: null
+      android_content_url:
+        description: Android Content url
+        type: string
+        example: http://54.82.56.55:1935/wowza/_definst_/mp4:wow/discovercontents/DISCOVERCLIP_PREVIEW_DISCOVERM4A_RT/8a1b8d2b61d7c831016206721e550822.m4a/playlist.m3u8
+      ios_content_url:
+        description: Android Content url
+        type: string
+        example: http://54.82.56.55:1935/wowza/_definst_/mp4:wow/discovercontents/DISCOVERCLIP_PREVIEW_DISCOVERM4A_RT/8a1b8d2b61d7c831016206721e550822.m4a/playlist.m3u8
+      deezer_handle:
+        description: DeezerID
+        type: string
+        example: 4099852
+      dyk_teaser:
+        description: Do You Know Teaser
+        type: string
+        example: 
+      dyk_text:
+        description: Do You Know Text
+        type: string
+        example: 
+      song_info_1:
+        description: Song Info 1
+        type: string
+        example: 
+      story_image_url:
+        description: Story Image url
+        type: string
+        example: 
+      total_claps:
+        description: Total Claps
+        type: integer
+        example: 0
+      total_likes:
+        description: Total Likes
+        type: integer
+        example: 0
+      content_order:
+        description: Content Order
+        type: integer
+        example: 546
+      context_start_date:
+        description: Context Start Date
+        type: string
+        format: date-time
+        example: 
+      context_end_date:
+        description: Context End Date
+        type: string
+        format: date-time
+        example: null
+      context_trivia:
+        description: Context Trivia
+        type: string
+        example: 
+      context_teaser:
+        description: Content Teaser
+        type: string
+        example: 
+      context_type:
+        description: Content Type
+        type: string
+        example: 
+      context:
+        description: Context
+        type: string
+        example: 
+      context_twitter_text:
+        description: Context Twitter Text
+        type: string
+        example: 
+      image_url:
+        description: Context Image Url
+        type: string
+        example: 
+      capture_color:
+        description: Capture Color
+        type: string
+        example: #800080
+      song_text_color:
+        description: Song Text Color
+        type: string
+        example: #ffffff
+      arrow_color:
+        description: Arrow Color
+        type: string
+        example: #ffffff
+      song_tags: 
+        description: Column name in Atlantis for MOOD (Genre/TAGS) 
+        type: string
+        example: 
+      charge_class: 
+        description: Defines the type of the content ( Premium or FREE) 
+        type: string
+        example: Premium
+      explicit_content: 
+        description: Explicit content  
+        type: string
+        example: 
+      contentidentifier_name: 
+        description: identifying the content ( Music, Status, Nametune) 
+        type: string
+        example: Nametune
+  getcontents: 
+    type: object   
+    properties:
+      offset:
+        description: Key which must be passed for getting next set of contents
+        type: integer
+        format: int32
+        example: 1
+      content:  
+        type: array
+        items:
+        -  $ref: '#/definitions/smallcontent'
+        -  $ref: '#/definitions/smallcontent1'
+  getdownloadedcontents: 
+    type: object   
+    properties:
+      offset:
+        description: Key which must be passed for getting next set of contents
+        type: integer
+        format: int32
+        example: 1
+      content:  
+        type: array
+        items:
+        -  $ref: '#/definitions/smallcontent3'
+        -  $ref: '#/definitions/smallcontent4'
+  ContentList:
+    type: object
+    properties:
+      content_list:
+        description: channelids:contentids of required contents
+        type: string
+        example: 570266a6d591c4e392a3845ff37ac2c6:f5576271af3d11dd00c6240a86ee76da, 29d97s6271af3d11dd00c6240a86ee76da:h55764af3d11dd00c6240a86ee76da
+  getcontentpost: 
+    type: array   
+    items:
+      -  $ref: '#/definitions/smallcontent'
+      -  $ref: '#/definitions/smallcontent1'
+  getcontentsingle: 
+    type: array   
+    items:
+      -  $ref: '#/definitions/smallcontent'
+  channel1:
+    type: object
+    properties:
+      channelid:
+        description: Channel ID
+        type: string
+        example: 570266a6d591c4e392a3845ff37ac2c6
+      name:
+        description: Channel name
+        type: string
+        example: Hip-Hop
+      description:
+        description: Description of the channel
+        type: string
+        example: Hip-Hop Category
+      artworkurl:
+        description: Relative URL of the artwork
+        type: string
+        example: 8a1b8d2b5fe16d15016031eba8bb5e15.jpg
+      start_date: 
+        description: start date of the channel
+        type: string
+        format: date-time
+        example: 2016-10-13 00:00:00
+      end_date: 
+        description: end date of the channel
+        type: string
+        format: date-time
+        example: 2020-10-13 00:00:00
+      channel_order: 
+        description: Channel Order
+        type: integer
+        format: int32
+        example: 23
+      artwork_url_2: 
+        description: Relative URL of the artwork
+        type: string
+        example: 8a1b8d2b5fe16d15016031eba8bb5e15.jpg
+      artwork_url_3: 
+        description: Relative URL of the artwork
+        type: string
+        example: 8a1b8d2b5fe16d15016031eba8bb5e15.jpg
+      artwork_url_4: 
+        description: Relative URL of the artwork
+        type: string
+        example: 8a1b8d2b5fe16d15016031eba8bb5e15.jpg
+      channel_type:
+        description: Channel Type
+        type: string
+        example: genre
+      mcc:
+        description: Mobile Country Code
+        type: integer
+        example: 
+      mnc:
+        description: Mobile Network Code
+        type: integer
+        example: 
+      os_version:
+        description: OS Version
+        type: string
+        example: 
+      app_os:
+        description: App OS
+        type: string
+        example: 
+      content:
+        type: array
+        items:
+        -  $ref: '#/definitions/fullcontent1'
+  channel2:
+    type: object
+    properties:
+      channelid:
+        description: Channel ID
+        type: string
+        example: 29d97s6271af3d11dd00c6240a86ee76da
+      name:
+        description: Channel name
+        type: string
+        example: Rock
+      description:
+        description: Description of the channel
+        type: string
+        example: Rock Category
+      artworkurl:
+        description: Relative URL of the artwork
+        type: string
+        example: 8a1b8d2b5fe16d15016031eba8bb5e15.jpg
+      start_date: 
+        description: start date of the channel
+        type: string
+        format: date-time
+        example: 2016-10-13 00:00:00
+      end_date: 
+        description: end date of the channel
+        type: string
+        format: date-time
+        example: 2020-10-13 00:00:00
+      channel_order: 
+        description: Channel Order
+        type: integer
+        format: int32
+        example: 23
+      artwork_url_2: 
+        description: Relative URL of the artwork
+        type: string
+        example: 8a1b8d2b5fe16d15016031eba8bb5e15.jpg
+      artwork_url_3: 
+        description: Relative URL of the artwork
+        type: string
+        example: 8a1b8d2b5fe16d15016031eba8bb5e15.jpg
+      artwork_url_4: 
+        description: Relative URL of the artwork
+        type: string
+        example: 8a1b8d2b5fe16d15016031eba8bb5e15.jpg
+      channel_type:
+        description: Channel Type
+        type: string
+        example: genre
+      mcc:
+        description: Mobile Country Code
+        type: integer
+        example: 
+      mnc:
+        description: Mobile Network Code
+        type: integer
+        example: 
+      os_version:
+        description: OS Version
+        type: string
+        example: 
+      app_os:
+        description: App OS
+        type: string
+        example: 
+      content:
+        type: array
+        items:
+        -  $ref: '#/definitions/fullcontent1'
+  channel3:
+    type: object
+    properties:
+      channelid:
+        description: Channel ID
+        type: string
+        example: 570266a6d591c4e392a3845ff37ac2c6
+      name:
+        description: Channel name
+        type: string
+        example: Hip-Hop
+      type:
+        description: Channel Type
+        type: string
+        example: Category
+  channel4:
+    type: object
+    properties:
+      channelid:
+        description: Channel ID
+        type: string
+        example: 362467svdhdg823bdbcbeuw8e99sd99sag
+      name:
+        description: Channel name
+        type: string
+        example: Rock
+      type:
+        description: Channel Type
+        type: string
+        example: Category
+  channel5:
+    type: object
+    properties:
+      channelid:
+        description: Channel ID
+        type: string
+        example: hndsufy773nr73837n37dy28912kjjsndnsnnjksdn
+      name:
+        description: Channel name
+        type: string
+        example: Happy
+      type:
+        description: Channel Type
+        type: string
+        example: Mood
+  channel:
+    type: object
+    properties:
+      channel:
+        type: array
+        items:
+          -  $ref: '#/definitions/channel1'
+  channelmultiple:
+    type: object
+    properties:
+      channel:
+        type: array
+        items:
+          - $ref: '#/definitions/channel1'
+          - $ref: '#/definitions/channel2'
+  tagsmultiple:
+    type: array
+    items:
+      - $ref: '#/definitions/channel3'
+      - $ref: '#/definitions/channel4'
+      - $ref: '#/definitions/channel5'
+  channel1ofDownloadHistory:
+    type: object
+    properties:
+      channelid:
+        description: Channel ID
+        type: string
+        example: 570266a6d591c4e392a3845ff37ac2c6
+      name:
+        description: Channel name
+        type: string
+        example: Hip-Hop
+      description:
+        description: Description of the channel
+        type: string
+        example: Hip-Hop Category
+      artworkurl:
+        description: Relative URL of the artwork
+        type: string
+        example: 8a1b8d2b5fe16d15016031eba8bb5e15.jpg
+      start_date: 
+        description: start date of the channel
+        type: string
+        format: date-time
+        example: 2016-10-13 00:00:00
+      end_date: 
+        description: end date of the channel
+        type: string
+        format: date-time
+        example: 2020-10-13 00:00:00
+      channel_order: 
+        description: Channel Order
+        type: integer
+        format: int32
+        example: 23
+      artwork_url_2: 
+        description: Relative URL of the artwork
+        type: string
+        example: 8a1b8d2b5fe16d15016031eba8bb5e15.jpg
+      artwork_url_3: 
+        description: Relative URL of the artwork
+        type: string
+        example: 8a1b8d2b5fe16d15016031eba8bb5e15.jpg
+      artwork_url_4: 
+        description: Relative URL of the artwork
+        type: string
+        example: 8a1b8d2b5fe16d15016031eba8bb5e15.jpg
+      channel_type:
+        description: Channel Type
+        type: string
+        example: genre
+      mcc:
+        description: Mobile Country Code
+        type: integer
+        example: 
+      mnc:
+        description: Mobile Network Code
+        type: integer
+        example: 
+      os_version:
+        description: OS Version
+        type: string
+        example: 
+      app_os:
+        description: App OS
+        type: string
+        example: 
+      content:
+        type: array
+        items:
+        -  $ref: '#/definitions/fullcontent1ofDownloadHistory'
+  fullcontent1ofDownloadHistory:
+    type: object
+    properties:
+      contentid:
+        description: Content Id
+        type: string
+        example: bfef758ac4d97301912ac12100c21d49
+      song_name:
+        description: Song Name
+        type: string
+        example: American Girl
+      language:
+        description: Language
+        type: string
+        example: English
+      movie_name:
+        description: Movie Name
+        type: string
+        example: Tom Petty & The Heartbreakers
+      singer:
+        description: Singer
+        type: string
+        example: Tom Petty And The Heartbreakers
+      actor:
+        description: Actor
+        type: string
+        example: Tom Petty And The Heartbreakers
+      isrc:
+        description: Isrc code
+        type: string
+        example: USMC17641688
+      genre:
+        description: Genre
+        type: string
+        example: null
+      artwork_url:
+        description: Artwork url
+        type: string
+        example: 8a1b8d2b61d7c831016206721e550822.jpg
+      content_url:
+        description: Content url
+        type: string
+        example: 8a1b8d2b61d7c831016206721e550822.m4a
+      promo_code:
+        description: Promo Code
+        type: string
+        example: 10348251
+      content_provider:
+        description: Content provider
+        type: string
+        example: Warner
+      rights_body:
+        description: Rights Body
+        type: string
+        example: ONMOBILE
+      label_name:
+        description: Label Name
+        type: string
+        example: Onmobile
+      song_release_date:
+        description: Song Release Date
+        type: string
+        format: date-time
+        example: null
+      movie_release_date:
+        description: Movie Release Date
+        type: string
+        format: date-time
+        example: null
+      start_date:
+        description: Start Date
+        type: string
+        format: date-time
+        example: 2018-03-08 00:00:00
+      end_date:
+        description: End Date
+        type: string
+        format: date-time
+        example: 2038-03-08 00:00:00
+      song_trivia:
+        description: Song Trivia
+        type: string
+        example: Despite this song never being a major hit (its biggest success was making the UK top 40), it became one of Tom Petty and The Heartbreakers’ most popular tracks. The Heartbreakers’ guitarist Mike Campbell told Songfacts.com that some people mistakenly think it is about suicide, whereas it’s actually a “really beautiful love song” with “some Florida imagery.”
+      content_url_rt:
+        description: Content Url RT
+        type: string
+        example: null
+      content_url_ft:
+        description: Content Url FT
+        type: string
+        example: null
+      song_twitter_text:
+        description: Song Twitter Text
+        type: string
+        example: null
+      spotify_handle:
+        description: SpotifyID
+        type: string
+        example: spotify:track:7MRyJPksH3G2cXHN8UKYzP
+      itunes_handle:
+        description: ItunesID
+        type: string
+        example: 892461953
+      playmusic_handle:
+        description: PlaymusicID
+        type: string
+        example: 
+      amazonmusic_handle:
+        description: AmazonmusicID
+        type: string
+        example: 
+      modified_time:
+        description: Modified Time
+        type: string
+        format: date-time
+        example: null
+      android_content_url:
+        description: Android Content url
+        type: string
+        example: http://54.82.56.55:1935/wowza/_definst_/mp4:wow/discovercontents/DISCOVERCLIP_PREVIEW_DISCOVERM4A_RT/8a1b8d2b61d7c831016206721e550822.m4a/playlist.m3u8
+      ios_content_url:
+        description: Android Content url
+        type: string
+        example: http://54.82.56.55:1935/wowza/_definst_/mp4:wow/discovercontents/DISCOVERCLIP_PREVIEW_DISCOVERM4A_RT/8a1b8d2b61d7c831016206721e550822.m4a/playlist.m3u8
+      deezer_handle:
+        description: DeezerID
+        type: string
+        example: 4099852
+      dyk_teaser:
+        description: Do You Know Teaser
+        type: string
+        example: 
+      dyk_text:
+        description: Do You Know Text
+        type: string
+        example: 
+      song_info_1:
+        description: Song Info 1
+        type: string
+        example: 
+      story_image_url:
+        description: Story Image url
+        type: string
+        example: 
+      total_claps:
+        description: Total Claps
+        type: integer
+        example: 0
+      total_likes:
+        description: Total Likes
+        type: integer
+        example: 0
+      content_order:
+        description: Content Order
+        type: integer
+        example: 546
+      context_start_date:
+        description: Context Start Date
+        type: string
+        format: date-time
+        example: 
+      context_end_date:
+        description: Context End Date
+        type: string
+        format: date-time
+        example: null
+      context_trivia:
+        description: Context Trivia
+        type: string
+        example: 
+      context_teaser:
+        description: Content Teaser
+        type: string
+        example: 
+      context_type:
+        description: Content Type
+        type: string
+        example: 
+      context:
+        description: Context
+        type: string
+        example: 
+      context_twitter_text:
+        description: Context Twitter Text
+        type: string
+        example: 
+      image_url:
+        description: Context Image Url
+        type: string
+        example: 
+      capture_color:
+        description: Capture Color
+        type: string
+        example: #800080
+      song_text_color:
+        description: Song Text Color
+        type: string
+        example: #ffffff
+      arrow_color:
+        description: Arrow Color
+        type: string
+        example: #ffffff
+      song_tags: 
+        description: Column name in Atlantis for MOOD (Genre/TAGS) 
+        type: string
+        example: 
+      charge_class: 
+        description: Defines the type of the content ( Premium or FREE) 
+        type: string
+        example: Premium
+      explicit_content: 
+        description: Explicit content  
+        type: string
+        example: 
+      contentidentifier_name: 
+        description: identifying the content ( Music, Status, Nametune) 
+        type: string
+        example: Nametune
+      cut_start_time: 
+        description: Start time of the song being cut
+        type: string
+        example: 63435
+      cut_end_time: 
+        description: End time of the song being cut
+        type: string
+        example: 74535
+  downloadhistory:
+    type: object
+    properties:
+      channel:
+        type: array
+        items:
+          - $ref: '#/definitions/channel1ofDownloadHistory'
+      subscription:
+        description: Subscription details of the user
+        allOf:
+          - $ref: '#/definitions/Subscription'
+  downloadrequest: 
+    type: object
+    properties:     
+      firebase_uid:
+        description: User specific firebase_uid provided by the firebase server
+        type: string
+        example: Fz3X8h6hjdoTh487jkkIjJ
+      firebase_token: 
+        description: Temporary token from firebase to validate a user
+        type: string
+        example: asdsX8h6hjdoTh487jkasg7tfdgas8g7tfg7tfq3eyq8gyFz3X8h6hjdoTh487jkkIj
+      contentid: 
+        description: Content ID
+        type: string
+        example: f5576271af3d11dd00c6240a86ee76da
+      cut_start_time: 
+        description: Start time of the song being cut
+        type: string
+        example: 345433
+      cut_end_time: 
+        description: End time of the song being cut
+        type: string
+        example: 878673
+    required:
+      - firebase_uid
+      - firebase_token
+      - contentid
+      - cut_start_time
+      - cut_end_time
+  400_response:
+    type: object
+    properties:
+      timestamp:
+        description: timestamp
+        type: string
+        example: 2018-04-18T05:46:05.905+0000
+      status:
+        description: status
+        type: string
+        example: 400
+      error:
+        description: error
+        type: string
+        example: Bad Request
+      message:
+        description: message
+        type: string
+        example: Required int parameter 'limit' is not present
+      path:
+        description: path
+        type: string
+        example: /ringtone/{Relative Url}
+      errors:
+        description: errors
+        type: array
+        items:
+        -  $ref: '#/definitions/errors'
+  errors:
+    type: array   
+    items:
+      -  $ref: '#/definitions/error'
+  error:
+    type: object
+    properties:
+      defaultMessage:
+        description: defaultMessage
+        type: string
+        example: must not be blank
+      objectName:
+        description: objectName
+        type: string
+        example: userRequest
+      field:
+        description: field
+        type: string
+        example: firebase_token
+      rejectedValue:
+        description: rejectedValue
+        type: string
+        example: 
+      bindingFailure:
+        description: bindingFailure
+        type: string
+        format: boolean
+        example: false
+      code:
+        description: code
+        type: string
+        example: NotBlank 
+      arguments:
+        type: array   
+        items:
+        -  $ref: '#/definitions/arguments'
+      codes:
+        type: array   
+        items:
+        -  $ref: '#/definitions/codes'
+  codes:
+    type: array
+    items:
+      type: string
+      enum: ["NotBlank.userRequest.firebase_token,
+                NotBlank.firebase_token,
+                NotBlank.java.lang.String,
+                NotBlank"]
+  arguments:
+    type: object
+    properties:
+      arguments:
+        description: arguments
+        type: string
+        example: 
+      defaultMessage:
+        description: defaultMessage
+        type: string
+        example: firebase_token
+      code: 
+        description: code
+        type: string
+        example: firebase_token
+      codes:
+        type: array   
+        items:
+        -  $ref: '#/definitions/codes'
+  500_response:
+    type: object
+    properties:
+      timestamp:
+        description: timestamp
+        type: string
+        example: 2018-04-18T05:46:05.905+0000
+      status:
+        description: status
+        type: string
+        example: 400
+      error:
+        description: error
+        type: string
+        example: Bad Request
+      message:
+        description: message
+        type: string
+        example: Required String parameter 'firebase_uid' is not present
+      path:
+        description: path
+        type: string
+        example: /ringtone/GetContentInfo
